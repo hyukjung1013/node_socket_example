@@ -1,32 +1,32 @@
-const WebSocket = require('ws');
+const SocketIO = require('socket.io');
 
 module.exports = (server) => {
-    const socketServer = new WebSocket.Server({ server: server });
 
-    socketServer.on('connection', (webSocket, req) => {
-        
-        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        console.log('Client connected. : ', ip);    // localhost is described as '::1'.
+    const io = SocketIO(server, { path: '/socket.io' });
 
-        webSocket.on('message', (message) => {
-            console.log(ip, ': ', message);
+    io.on('connection', (socket) => {
+        const request = socket.request;
+        const ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+        console.log('Client connected.');
+        console.log('- Client IP: ', ip);
+        console.log('- Socket ID: ', socket.id);
+        console.log('- REQUEST: ', request);
+
+        socket.on('reply', (data) => {
+            console.log(data);
         });
 
-        webSocket.on('error', (error) => {
-            console.log('Error: ', error);
+        socket.on('error', (err) => {
+            console.log(err);
         });
 
-        webSocket.on('close', () => {
+        socket.on('disconnect', () => {
             console.log('Client disconnected. : ', ip);
-            clearInterval(webSocket.interval);
+            clearInterval(socket.interval);
         });
 
-        const interval = setInterval(() => {
-            if (webSocket.readyState === webSocket.OPEN) {
-                webSocket.send('Message from the Server.');
-            }
+        socket.interval = setInterval(() => {
+            socket.emit('news', 'Message from the server.');
         }, 3000);
-
-        webSocket.interval = interval;
     });
 }

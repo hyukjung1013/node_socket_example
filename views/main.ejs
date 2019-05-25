@@ -3,21 +3,22 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no"/>
-    <link rel="stylesheet" href="/css/login.css"/>
 </head>
 <body>
     <div id="container">
         <h1>The followings are the message from the server.</h1>
     </div>
+    <script src="/socket.io/socket.io.js/"></script>
     <script>
-        var webSocket = new WebSocket('ws://localhost:9004');
-        webSocket.onopen = function () {
-            console.log('Success to connect with Server.');
-        }
-        webSocket.onmessage = function(event) {
-            var str = `<div>${event.data}</div>`;
+
+        var socket = io.connect('http://localhost:9004', {
+            path: '/socket.io'
+        });
+
+        socket.on('news', function(data) {
+            var str = `<div>${data}</div>`;
             document.write(str);
-            webSocket.send('Message from the Client');
-        }
+            socket.emit('reply', 'Message from the client.');
+        });
     </script>
 </body>
